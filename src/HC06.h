@@ -11,6 +11,8 @@
 
 #include <Arduino.h>
 
+#define HC06_SOFTWARE   //Uncomment to enable hc06 on hardware serial
+
 /**
  * @brief Error Codes of HC06 methods
  * 
@@ -30,7 +32,7 @@ class HC06: public HardwareSerial
 #endif
 {
 private:
-    long detectedBaudRate;
+    unsigned long detectedBaudRate;
     int sendMessage(String message, String data);
     bool connected;
 public:
@@ -44,7 +46,7 @@ public:
     #endif
     long getBaudRate();
     int setup(
-        String name = "HC06", 
+        String name = "HC-06", 
         String PIN = "1234", 
         unsigned long baudRate = 9600UL, 
         bool checkBaudRate = true

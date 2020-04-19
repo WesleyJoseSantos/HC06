@@ -8,6 +8,8 @@
 
 #include "HC06.h"
 
+#define HC06_SOFTWARE   //Uncomment to enable hc06 on hardware serial
+
 unsigned long baudRates[] = {
     1200,
     2400,
@@ -39,11 +41,13 @@ long HC06::getBaudRate(){
         this->print("AT");
         delay(1000);
         if(this->available()){
-            #ifdef HC06_DEBUG
-            HC06_DEBUG.println(" | 100% Baud Rate Detected: "); HC06_DEBUG.println(baudRates[i]);
-            #endif
-            detectedBaudRate = baudRates[i];
-            return(baudRates[i]);
+            if(this->readString() == "OK"){
+                #ifdef HC06_DEBUG
+                HC06_DEBUG.println(" | 100% Baud Rate Detected: "); HC06_DEBUG.println(baudRates[i]);
+                #endif
+                detectedBaudRate = baudRates[i];
+                return(baudRates[i]);
+            }
         }
     }
     #ifdef HC06_DEBUG
@@ -61,19 +65,20 @@ long HC06::getBaudRate(){
  * @param checkBaudRate Get HC06 configured baudRate before setup
  * @return ErrCode
  */
-int HC06::setup(String name = "HC06", String PIN = "1234", unsigned long baudRate = 9600UL, bool checkBaudRate = true){
+int HC06::setup(String name = "HC-06", String PIN = "1234", unsigned long baudRate = 9600UL, bool checkBaudRate = true){
     #ifdef HC06_DEBUG
     HC06_DEBUG.println("Starting setup of HC06.");
     #endif
     if(checkBaudRate){
         getBaudRate();
-        this->begin(detectedBaudRate);
     }else{
-        this->begin(baudRates[baudRate-1]);
+        this->begin(baudRate);
     }
-    int err_code = setBaud(baudRate);
+    int err_code = 0;
+    if(detectedBaudRate != baudRate)
+        err_code = setBaud(baudRate);
     if(err_code) return(ERR_SETUP);
-    if(checkBaudRate)
+    if(checkBaudRate && (detectedBaudRate != baudRate))
         this->begin(baudRate);
     err_code = setName(name);
     if(err_code) return(ERR_SETUP);
